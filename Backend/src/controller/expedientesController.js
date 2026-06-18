@@ -14,18 +14,12 @@ expedientes.getExpedientes = async (req, res) => {
 
 expedientes.insertExpediente = async (req, res) => {
     try {
-        let {
+        const {
             patient_id,
             diagnosis,
             medications, 
             medicalNotes,
         }=req.body
-
-
-
-        if (!patient_id || !diagnosis || !medications ) {
-            return res.status(400).json({ message: "Campos requeridos" })
-        }
 
         const NewExpediente = new expedientesModels({
             patient_id,
