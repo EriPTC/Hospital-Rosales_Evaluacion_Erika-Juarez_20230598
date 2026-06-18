@@ -8,8 +8,6 @@ logoutController.logout = (req, res) => {
     } catch (error) {
         console.log("error"+error)
         return res.status(500).json({ message: "Internal Served Error" })
-
-
     }
 }
 

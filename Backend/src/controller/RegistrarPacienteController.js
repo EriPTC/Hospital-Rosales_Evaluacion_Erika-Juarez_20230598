@@ -1,0 +1,88 @@
+import nodemailer from "nodemailer";
+import crypto from "crypto";
+import bcrypt from "bcryptjs";
+import JsonWebToken from "jsonwebtoken";
+import { config } from "../../config.js";
+import PacientesModels from "../models/Pacientes.js";
+import { json, text } from "stream/consumers";
+
+const registerPacientes = {};
+
+registerPacientes.register = async (req, res) => {
+    const {
+        name,
+        lastName,
+        email,
+        password,
+        phone,
+        address,
+        phoneEmergencyContacts, //[{phone, nameEmergencyContact}]
+        profilePhoto,
+        isverified,
+        loginAttempts,
+        timeOut,
+    } = req.body;
+
+    try {
+        const existPaciente = await PacientesModels.findOne({ email });
+
+        if (existPaciente) {
+            return res.status(400).json({ message: "Paciente existente" });
+        }
+
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        const VerificationCode = crypto.randomBytes(3).toString("hex");
+        const tokenCode = JsonWebToken.sign(
+            {
+                name,
+                lastName,
+                email,
+                password,
+                phone,
+                address,
+                phoneEmergencyContacts,
+                profilePhoto,
+                isverified,
+                loginAttempts,
+                timeOut,
+                VerificationCode
+            },
+            config.Jwt.SECRET,
+            {
+                expiresIn: "15m"
+            }
+        );
+
+        res.cookie("verificationToken", tokenCode, { MaxAge: 15 * 60 * 1000 })
+
+
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: config.email.USER_EMAIL,
+                pass: config.email.USER_PASSWORD
+            }
+        })
+
+        const mailOptions = {
+            from: config.email.USER_EMAIL,
+            to: email,
+            subject: "Verificar contraseña",
+            text: "Utiliza este codigo: " + VerificationCode + " para verificar tu correo, Expira en 15 minutos"
+        }
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log("error" + error);
+                return res.status(500).json({ message: "Error al enviar el correo" });
+            }
+            res.json({ message: "Correo enviado correctamente" });
+        }
+        )
+
+    } catch (error) {
+        console.log("error" + error);
+        return res.status(500).json({ message: "Internal Served Error" });
+    }
+};
