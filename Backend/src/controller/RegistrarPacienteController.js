@@ -4,7 +4,8 @@ import bcrypt from "bcryptjs";
 import JsonWebToken from "jsonwebtoken";
 import { config } from "../../config.js";
 import PacientesModels from "../models/Pacientes.js";
-import { v2 as Cloudinary } from "cloudinary"
+import {v2 as Cloudinary} from "cloudinary"
+
 
 
 
@@ -125,8 +126,6 @@ registerPacientes.verifycode = async (req, res) => {
             phone,
             address,
             phoneEmergencyContacts,
-            profilePhoto: req.file.path,
-            public_id: req.file.filename,
             isverified:true,
             loginAttempts,
             timeOut

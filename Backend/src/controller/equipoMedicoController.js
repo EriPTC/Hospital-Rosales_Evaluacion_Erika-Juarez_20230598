@@ -1,5 +1,5 @@
 import equipoMedicoModels from "../models/equipoMedico.js";
-import { v2 as Cloudinary } from "cloudinary"
+import {v2 as Cloudinary} from "cloudinary"
 
 const equipoMedico = {}
 
