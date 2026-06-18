@@ -4,7 +4,6 @@ import bcrypt from "bcryptjs";
 import JsonWebToken from "jsonwebtoken";
 import { config } from "../../config.js";
 import PacientesModels from "../models/Pacientes.js";
-import { json, text } from "stream/consumers";
 
 const registerPacientes = {};
 
@@ -16,8 +15,7 @@ registerPacientes.register = async (req, res) => {
         password,
         phone,
         address,
-        phoneEmergencyContacts, //[{phone, nameEmergencyContact}]
-        profilePhoto,
+        phoneEmergencyContacts, 
         isverified,
         loginAttempts,
         timeOut,
@@ -42,7 +40,8 @@ registerPacientes.register = async (req, res) => {
                 phone,
                 address,
                 phoneEmergencyContacts,
-                profilePhoto,
+                profilePhoto: req.file.path,
+                public_id: req.file.filename,
                 isverified,
                 loginAttempts,
                 timeOut,
@@ -68,7 +67,7 @@ registerPacientes.register = async (req, res) => {
         const mailOptions = {
             from: config.email.USER_EMAIL,
             to: email,
-            subject: "Verificar contraseña",
+            subject: "Verificar correo",
             text: "Utiliza este codigo: " + VerificationCode + " para verificar tu correo, Expira en 15 minutos"
         }
 
@@ -86,3 +85,62 @@ registerPacientes.register = async (req, res) => {
         return res.status(500).json({ message: "Internal Served Error" });
     }
 };
+
+registerPacientes.verifycode = async (req, res) => {
+    try {
+        const { VerificationCodeRequest } = req.body
+        const token = req.cookie.verificationToken
+        const decoded = JsonWebToken.verify(token, config.Jwt.SECRET)
+
+        const {
+            name,
+            lastName,
+            email,
+            password,
+            phone,
+            address,
+            phoneEmergencyContacts,
+            isverified,
+            loginAttempts,
+            timeOut,
+            VerificationCode: storedCode
+
+        } = decoded
+
+        if (VerificationCode !== storedCode) {
+            return res.status(400).json({ message: "Codigo Invalido" });
+        }
+
+        const newPaciente = new PacientesModels({
+            name,
+            lastName,
+            email,
+            password : passwordHash,
+            phone,
+            address,
+            phoneEmergencyContacts, 
+            profilePhoto: req.file.path,
+            public_id: req.file.filename,
+            isverified: true,
+            loginAttempts,
+            timeOut
+        })
+        
+        await newPaciente.save()
+
+        const paciente = await PacientesModels.findOne({email})
+        paciente.isverified=true
+        await paciente.save()
+
+        res.clearCookie("verificationToken")
+        res.json({ message: "Paciente Registrado" });
+
+
+    } catch (error) {
+        console.log("error" + error);
+        return res.status(500).json({ message: "Internal Served Error" });
+    }
+
+}
+
+export default registerPacientes
