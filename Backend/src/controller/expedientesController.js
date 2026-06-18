@@ -19,7 +19,7 @@ expedientes.insertExpediente = async (req, res) => {
             diagnosis,
             medications, 
             medicalNotes,
-        } = req.body
+        }=req.body
 
 
 

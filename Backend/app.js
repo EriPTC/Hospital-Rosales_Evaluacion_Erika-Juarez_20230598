@@ -2,7 +2,7 @@ import express from "express"
 import cookieParser from "cookie-parser"
 import cors from "cors"
 
-import limiter  from "./src/middlewares/limiter"
+import limiter  from "./src/middlewares/limiter.js"
 
 //*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*//*
 

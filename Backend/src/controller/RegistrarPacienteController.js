@@ -4,6 +4,9 @@ import bcrypt from "bcryptjs";
 import JsonWebToken from "jsonwebtoken";
 import { config } from "../../config.js";
 import PacientesModels from "../models/Pacientes.js";
+import { v2 as Cloudinary } from "cloudinary"
+
+
 
 const registerPacientes = {};
 
@@ -15,7 +18,7 @@ registerPacientes.register = async (req, res) => {
         password,
         phone,
         address,
-        phoneEmergencyContacts, 
+        phoneEmergencyContacts,
         isverified,
         loginAttempts,
         timeOut,
@@ -30,13 +33,13 @@ registerPacientes.register = async (req, res) => {
 
         const passwordHash = await bcrypt.hash(password, 10);
 
-        const VerificationCode = crypto.randomBytes(3).toString("hex");
+        const VerificationCodeRequest = crypto.randomBytes(3).toString("hex");
         const tokenCode = JsonWebToken.sign(
             {
                 name,
                 lastName,
                 email,
-                password,
+                password: passwordHash,
                 phone,
                 address,
                 phoneEmergencyContacts,
@@ -45,7 +48,7 @@ registerPacientes.register = async (req, res) => {
                 isverified,
                 loginAttempts,
                 timeOut,
-                VerificationCode
+                VerificationCodeRequest
             },
             config.Jwt.SECRET,
             {
@@ -68,7 +71,7 @@ registerPacientes.register = async (req, res) => {
             from: config.email.USER_EMAIL,
             to: email,
             subject: "Verificar correo",
-            text: "Utiliza este codigo: " + VerificationCode + " para verificar tu correo, Expira en 15 minutos"
+            text: "Utiliza este codigo: " + VerificationCodeRequest + " para verificar tu correo, Expira en 15 minutos"
         }
 
         transporter.sendMail(mailOptions, (error, info) => {
@@ -89,7 +92,7 @@ registerPacientes.register = async (req, res) => {
 registerPacientes.verifycode = async (req, res) => {
     try {
         const { VerificationCodeRequest } = req.body
-        const token = req.cookie.verificationToken
+        const token = req.cookies.verificationToken
         const decoded = JsonWebToken.verify(token, config.Jwt.SECRET)
 
         const {
@@ -103,33 +106,36 @@ registerPacientes.verifycode = async (req, res) => {
             isverified,
             loginAttempts,
             timeOut,
-            VerificationCode: storedCode
+            VerificationCodeRequest: storedCode
 
         } = decoded
 
-        if (VerificationCode !== storedCode) {
+        if (VerificationCodeRequest !== storedCode) {
             return res.status(400).json({ message: "Codigo Invalido" });
         }
+
+        const passwordHash = await bcrypt.hash(password, 10);
+
 
         const newPaciente = new PacientesModels({
             name,
             lastName,
             email,
-            password : passwordHash,
+            password:passwordHash,
             phone,
             address,
-            phoneEmergencyContacts, 
+            phoneEmergencyContacts,
             profilePhoto: req.file.path,
             public_id: req.file.filename,
-            isverified: true,
+            isverified:true,
             loginAttempts,
             timeOut
         })
-        
+
         await newPaciente.save()
 
-        const paciente = await PacientesModels.findOne({email})
-        paciente.isverified=true
+        const paciente = await PacientesModels.findOne({ email })
+        paciente.isverified = true
         await paciente.save()
 
         res.clearCookie("verificationToken")

@@ -66,7 +66,7 @@ recoveryPasswordPaciente.recoveryPassword = async (req, res) => {
 recoveryPasswordPaciente.verifyCode = async (req, res) => {
     try {
         const { codeRequest } = req.body
-        const token = req.cookie.recoveryCookie
+        const token = req.cookies.recoveryCookie
         const decoded = JsonWebToken.verify(token, config.Jwt.SECRET)
 
         if (decoded.code !== codeRequest) {
@@ -103,7 +103,7 @@ recoveryPasswordPaciente.newPassword = async (req, res) => {
             return res.status(400).json({ message: "Las contraseñas no coinciden" })
         }
 
-        const token = req.cookie.recoveryCookie
+        const token = req.cookies.recoveryCookie
         const decoded = JsonWebToken.verify(token, config.Jwt.SECRET)
 
         if (!decoded.verified) {

@@ -1,4 +1,5 @@
 import equipoMedicoModels from "../models/equipoMedico.js";
+import { v2 as Cloudinary } from "cloudinary"
 
 const equipoMedico = {}
 
@@ -43,7 +44,7 @@ equipoMedico.insertEquipo = async (req, res) => {
             maintenanceDate,
             condition,
             image: req.file.path,
-            public_id: req.file.filename ,
+            public_id: req.file.filename,
             status,
             isAvailable,
         })
@@ -92,6 +93,8 @@ equipoMedico.putEquipo = async (req, res) => {
             purchaseDate,
             maintenanceDate,
             condition,
+            image: req.file.path,
+            public_id: req.file.filename,
             status,
             isAvailable,
         }

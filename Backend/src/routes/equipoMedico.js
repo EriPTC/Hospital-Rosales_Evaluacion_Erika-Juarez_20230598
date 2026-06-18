@@ -7,10 +7,10 @@ const router = express.Router()
 
 router.route("/")
 .get(equipoController.getEquipoMedico)
-.post(upload.single("profilePhoto"), equipoController.insertEquipo)
+.post(upload.single("image"), equipoController.insertEquipo)
 
 router.route("/:id")
-.put(upload.single("profilePhoto"), equipoController.putEquipo)
+.put(upload.single("image"), equipoController.putEquipo)
 .delete(equipoController.deleteEquipo)
 
 export default router
